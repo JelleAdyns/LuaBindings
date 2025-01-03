@@ -24,6 +24,7 @@ include(FetchContent)
 FetchContent_Declare(
     lua
     URL https://github.com/marovira/lua/archive/refs/tags/5.4.4.tar.gz
+    GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(lua)
 
@@ -33,6 +34,7 @@ FetchContent_MakeAvailable(lua)
 FetchContent_Declare(
     sol2
     URL https://github.com/ThePhD/sol2/archive/refs/tags/v3.3.0.tar.gz
+    GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(sol2)
 target_link_libraries(${PROJECT_NAME} PRIVATE lua::lua sol2)
