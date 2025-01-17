@@ -1077,9 +1077,9 @@ void GameEngine::SetWindowPosition(int left, int top)
 	InvalidateRect(m_Window, nullptr, TRUE);
 }
 
-void GameEngine::SetColor(COLORREF color) 
-{ 
-	m_ColDraw = color; 
+void GameEngine::SetColor(COLORREF color)
+{
+	m_ColDraw = color;
 }
 
 void GameEngine::SetFont(Font* fontPtr)

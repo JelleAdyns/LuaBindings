@@ -39,10 +39,18 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(sol2)
 target_link_libraries(${PROJECT_NAME} PRIVATE lua::lua sol2)
 
+
+#Copy Resources
 message(STATUS "BINARY DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
-                ${CMAKE_SOURCE_DIR}/Scripts
-                ${CMAKE_CURRENT_BINARY_DIR}/Scripts
+message(STATUS "CMAKE EXE: ${CMAKE_COMMAND}")
+
+#https://www.youtube.com/watch?v=sTuIRzrB2dA
+
+add_custom_target(copyResources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/Scripts
+    ${CMAKE_CURRENT_BINARY_DIR}/Scripts
+    COMMENT "Copying resources into the binary folder"
 )
+
+add_dependencies(${PROJECT_NAME} copyResources)
