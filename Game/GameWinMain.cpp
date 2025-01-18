@@ -136,12 +136,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     
     luaL_openlibs(lua.lua_state());
     std::string scriptName = "Scripts/Breakout.lua";
-    lua.script_file(scriptName);
-
-    lua["GameEngine"] = GAME_ENGINE;
-
+    
     myGameEngine.SetGame(new Game(lua));
-	return myGameEngine.Run(hInstance, nCmdShow);
+
+    int result = 0;
+    try
+    {  
+        lua["GameEngine"] = GAME_ENGINE;
+        lua.script_file(scriptName);
+        result = myGameEngine.Run(hInstance, nCmdShow);
+    }
+    catch (const sol::error& e)
+    {
+        OutputDebugStringA("\nError executing Lua script: " );
+        OutputDebugStringA(e.what());
+        OutputDebugStringA("\n\n");
+    }
+    return result;
 
 }
 
