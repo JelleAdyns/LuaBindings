@@ -292,6 +292,9 @@ function paint(rect)
 end
 
 function tick()
+
+    ball:tick()
+
     for i = 1, #collisionShapes do
         ball:handle_collision(collisionShapes[i])
     end 
@@ -302,10 +305,18 @@ function tick()
         end
     end
     if(ball:handle_collision(Platform.hitregion)) then
-       --ball.directionX = get_center(ball.hitregion).x
-      -- ball.directionX = 
+        local dX = get_center(ball.hitregion).x - get_center(Platform.hitregion).x
+        local dY = get_center(ball.hitregion).y - get_center(Platform.hitregion).y
+
+        local hypothenuse = math.sqrt(dX^2 + dY^2)
+
+        dX = dX / hypothenuse
+        dY = dY / hypothenuse
+        print(dX, dY)
+        ball.directionX = dX;
+        ball.directionY = dY;
     end
-    ball:tick()
+    
 end
 
 --- @param isLeft boolean
