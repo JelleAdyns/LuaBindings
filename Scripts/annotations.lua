@@ -17,43 +17,17 @@ LongPoint = {}
 --- @field right integer 
 --- @field bottom integer 
 LongRect = {}
-    
------ @enum HitRegionShape
------ @field Ellipse: integer
------ @field Rectangle: integer
---HitRegionShape = {}
---
------ @class HitRegion
---HitRegion = {}
---
------ @param shape HitRegionShape 
------ @param left integer
------ @param top integer
------ @param right integer
------ @param bottom integer
------ @return HitRegion
---function HitRegion.new(shape,left, top , right, bottom) end
---
------ @param x: integer
------ @param y: integer
---function HitRegion:move(x,y) end
---    
------ @param x: integer
------ @param y: integer
------ @return boolean
------ @overload fun(hitregion: HitRegion): boolean
---function HitRegion:hit_test(x,y) end
---        
------ @param hitregion: HitRegion
------ @return Point
---function HitRegion:collision_test(hitregion) end
---
------ @return Rect
---function HitRegion:get_bounds() end
---
------ @return boolean
---function HitRegion:exists() end
 
+---@class Font
+Font = {}
+    
+---@param fontname string
+---@param bold boolean
+---@param italic boolean
+---@param underline boolean
+---@param size integer
+---@return Font
+function Font.new(fontname,bold, italic, underline, size) end
 
 
 --- @class GameEngine
@@ -78,9 +52,8 @@ function GameEngine:set_framerate(framerate) end
 --- @param keys string
 function GameEngine:set_key_list(keys) end
 
---- @param rgb integer
---- @return bool
-function GameEngine:fill_window_rect(rgb) end
+---@param font Font
+function GameEngine:set_font(font) end
 
 -- [[Getters]]
 
@@ -94,6 +67,10 @@ function GameEngine:get_width() end
 function GameEngine:get_height() end
 
 -- [[Draw-functions]]
+
+--- @param rgb integer
+--- @return bool
+function GameEngine:fill_window_rect(rgb) end
 
 --- @param x1 integer
 --- @param y1 integer

@@ -1,11 +1,15 @@
 -- Breakout game
 
+local START = false
 local WINDOW_WIDTH = 160*4
 local WINDOW_HEIGHT = 192*4
+local SCORE = 0
 local YELLOW = RGB(201, 198, 22)
 local ORANGE = RGB(199, 126, 0)
 local GREEN = RGB(0, 126, 36)
 local RED = RGB(159, 8, 0)
+--local USEDFONT = Font.new("OCR A Extended",true,false,false, 64)
+local USEDFONT = Font.new("OCR A Extended",true,false,false, 64)
 
 local rowColors = {
     {score = 7, color = RED},
@@ -70,6 +74,16 @@ function Rect:move(x, y)
     self.bottom = self.bottom + y
 end
     
+--- @param width number 
+function Rect:set_width(width)
+    self.right = self.left + width
+end
+
+--- @param height number
+function Rect:set_height(height)
+    self.bottom = self.top + height
+end
+
 --- @param hitRegion Rect
 --- @return Point
 function get_center(hitregion)
@@ -134,9 +148,9 @@ end
 ---@field hitregion Rect
 local Platform = {
     hitregion = Rect.new(
-         (WINDOW_WIDTH/2-BRICK_WIDTH/2), 
+         -1000, 
          (WINDOW_HEIGHT -60),
-         (WINDOW_WIDTH/2+BRICK_WIDTH/2), 
+         1000, 
          (WINDOW_HEIGHT-60 + BRICK_WIDTH/3)
          )
 }
@@ -155,7 +169,7 @@ end
 ----------------------------------------------------------------------------------------------
 -- Ball stuff
 ----------------------------------------------------------------------------------------------
-local BALLDEFAULTSPEED = 300
+local BALLDEFAULTSPEED = 500
 ---@class Ball
 ---@field radius number
 ---@field hitregion Rect
@@ -173,8 +187,8 @@ function Ball.new(x, y)
         y-self.radius,
         x+self.radius,
         y+self.radius)
-    self.directionX = 1
-    self.directionY = -1
+    self.directionX = 0.707
+    self.directionY = -0.707
     return self
  end
 function Ball:draw()
@@ -194,7 +208,17 @@ function Ball:tick()
        self.directionY * BALLDEFAULTSPEED * delta_time()
         ) 
 end
-
+function Ball:reset()
+    local x = WINDOW_WIDTH/2
+    local y = WINDOW_HEIGHT-100
+    self.hitregion = Rect.new( 
+        x-self.radius,
+        y-self.radius,
+        x+self.radius,
+        y+self.radius)
+    self.directionX = 1
+    self.directionY = -1
+end
 ---@param collisionShape Rect
 ---@return boolean
 function Ball:handle_collision(collisionShape)
@@ -253,9 +277,10 @@ local collisionShapes =
 function initialize()
     GameEngine:set_width(WINDOW_WIDTH)
     GameEngine:set_height(WINDOW_HEIGHT)
-    GameEngine:set_title("My Game")
-    GameEngine:set_key_list("K")
+    GameEngine:set_title("SE_Jelle_Adyns_Breakout")
+    GameEngine:set_key_list("KS")
     GameEngine:set_framerate(60)
+    GameEngine:set_font(USEDFONT)
    
 end
 
@@ -289,6 +314,11 @@ function paint(rect)
 
    Platform:draw()
    ball:draw()
+
+   ---@diagnostic disable-next-line: param-type-not-match
+   GameEngine:draw_string(string.format("%03d",tostring(SCORE)), BORDER+80,math.floor((HUDSPACE -BORDER*3)/2 + BORDER*3), math.floor(WINDOW_WIDTH/2), HUDSPACE)
+   ---@diagnostic disable-next-line: param-type-not-match
+   GameEngine:draw_string(tostring(1), BORDER+ 40,BORDER*3, math.floor(WINDOW_WIDTH/2), HUDSPACE)
 end
 
 function tick()
@@ -299,22 +329,21 @@ function tick()
         ball:handle_collision(collisionShapes[i])
     end 
     for i = 1, #bricks do
-        if(ball:handle_collision(bricks[i].hitregion)) then
+        if(ball:handle_collision(bricks[i].hitregion) and START) then
             removedBrick = table.remove(bricks, i)
+            SCORE = SCORE + removedBrick.score
             removedBrick = nil
+            break
         end
     end
-    if(ball:handle_collision(Platform.hitregion)) then
+    if(ball:handle_collision(Platform.hitregion) and START) then
+
         local dX = get_center(ball.hitregion).x - get_center(Platform.hitregion).x
         local dY = get_center(ball.hitregion).y - get_center(Platform.hitregion).y
-
         local hypothenuse = math.sqrt(dX^2 + dY^2)
 
-        dX = dX / hypothenuse
-        dY = dY / hypothenuse
-        print(dX, dY)
-        ball.directionX = dX;
-        ball.directionY = dY;
+        ball.directionX = dX / hypothenuse;
+        ball.directionY = dY / hypothenuse;
     end
     
 end
@@ -325,17 +354,7 @@ end
 --- @param y integer
 --- @param wParam integer
 function mouse_button_action(isLeft, isDown,  x, y,  wParam)
-    if(isLeft and isDown)
-    then
-        for i = 1, #bricks do
-            if(x > bricks[i].hitregion.left and x < bricks[i].hitregion.right and
-                y > bricks[i].hitregion.top and y < bricks[i].hitregion.bottom)
-            then
-                removedBrick = table.remove(bricks, i)
-                removedBrick = nil
-            end
-        end
-    end
+    
 end
 
 --- @param x integer
@@ -360,8 +379,19 @@ end
 
 --- @param key integer
 function key_pressed(key)
-    if(key == 'K') 
-    then
-        print("Released K")
+    if(key == 'S') then
+        START = not START
+        if START then
+            Platform.hitregion = Rect.new(
+                (WINDOW_WIDTH/2-BRICK_WIDTH/2), 
+                (WINDOW_HEIGHT -60),
+                (WINDOW_WIDTH/2+BRICK_WIDTH/2), 
+                (WINDOW_HEIGHT-60 + BRICK_WIDTH/3)
+            )  
+        else
+            Platform.hitregion.left = -1000
+            Platform.hitregion.right = 1000
+        end
+        ball:reset()
     end
 end

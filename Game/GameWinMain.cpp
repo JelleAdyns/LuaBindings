@@ -33,10 +33,6 @@ void AllocateConsole()
         std::ios::sync_with_stdio(true);         // Sync C++ streams with the console
     }
 }
-void OutputLuaMessage(const tstring& message)
-{
-    tcout << message;
-}
 void CreateBindings(sol::state& lua)
 {
     lua.new_usertype<POINT>(
@@ -75,6 +71,8 @@ void CreateBindings(sol::state& lua)
         "exists", &HitRegion::Exists
     );
 
+    lua.new_usertype<Font>("Font", sol::constructors<Font(const tstring&, bool, bool, bool, int)>());
+
     lua.new_usertype<GameEngine>(
         "GameEngine",
         // Setters
@@ -83,13 +81,14 @@ void CreateBindings(sol::state& lua)
         "set_title", &GameEngine::SetTitle,
         "set_color", &GameEngine::SetColor,
         "set_framerate", &GameEngine::SetFrameRate,
-        "fill_window_rect", &GameEngine::FillWindowRect,
         "set_key_list", &GameEngine::SetKeyList,
+        "set_font", &GameEngine::SetFont,
         // Getters
         "get_frame_delay", &GameEngine::GetFrameDelay,
         "get_width", &GameEngine::GetWidth,
         "get_height", &GameEngine::GetHeight,
         // Draw-functions
+        "fill_window_rect", &GameEngine::FillWindowRect,
         "draw_line", &GameEngine::DrawLine,
         "draw_rect", &GameEngine::DrawRect,
         "draw_rounded_rect", &GameEngine::DrawRoundRect,
@@ -111,9 +110,6 @@ void CreateBindings(sol::state& lua)
     );
 
     lua["RGB"] = [](int r, int g, int b) {return RGB(r, g, b); };
-   lua.set_function("OutputLuaMessage", [&](const tstring& message) {
-       OutputLuaMessage(message); // Call the C++ function
-       });
 }
 
 //-----------------------------------------------------------------
@@ -135,15 +131,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     CreateBindings(lua);
     
     luaL_openlibs(lua.lua_state());
-    std::string scriptName = "Scripts/Breakout.lua";
-    
+   
     myGameEngine.SetGame(new Game(lua));
 
     int result = 0;
     try
     {  
-        lua["GameEngine"] = GAME_ENGINE;
+        std::string scriptName = "Scripts/Breakout.lua";
         lua.script_file(scriptName);
+        lua["GameEngine"] = GAME_ENGINE;
         result = myGameEngine.Run(hInstance, nCmdShow);
     }
     catch (const sol::error& e)
