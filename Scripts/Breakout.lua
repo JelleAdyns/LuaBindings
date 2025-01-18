@@ -2,15 +2,20 @@
 
 local WINDOW_WIDTH = 160*4
 local WINDOW_HEIGHT = 192*4
+local YELLOW = RGB(201, 198, 22)
+local ORANGE = RGB(199, 126, 0)
+local GREEN = RGB(0, 126, 36)
+local RED = RGB(159, 8, 0)
+
 local rowColors = {
-    RGB(200,0,0),
-    RGB(0,200,0),
-    RGB(0,0,200),
-    RGB(200,200,0),
-    RGB(0,200,200),
-    RGB(200,0,200),
-    RGB(200,100,30),
-    RGB(200,200,200),
+    {score = 7, color = RED},
+    {score = 7, color = RED},
+    {score = 5, color = ORANGE},
+    {score = 5, color = ORANGE},
+    {score = 3, color = GREEN},
+    {score = 3, color = GREEN},
+    {score = 1, color = YELLOW},
+    {score = 1, color = YELLOW}
     }
 function delta_time()
     return GameEngine:get_frame_delay()/1000
@@ -46,6 +51,7 @@ Rect.__index = Rect
 --- @param top number 
 --- @param right number
 --- @param bottom number
+--- @return Rect
 function Rect.new(left, top, right, bottom)
 local self = setmetatable({},Rect)
 self.left = left or 0
@@ -89,21 +95,23 @@ local BORDER = 10
 local SPACE_BETWEEN_BRICKS = 5
 local AMOUNT_OF_COLUMS = 14
 local BRICK_WIDTH = (WINDOW_WIDTH - ((AMOUNT_OF_COLUMS-1) * SPACE_BETWEEN_BRICKS + 2* BORDER)) / AMOUNT_OF_COLUMS
-local Brick = { 
-    width = BRICK_WIDTH,
-    height = BRICK_WIDTH/4
-    }
+local BRICK_HEIGHT = BRICK_WIDTH/4
+local Brick = { }
 Brick.__index = Brick
 
 --- Constructor for the Brick class
---- @param x number 
---- @param y number 
+--- @param left number 
+--- @param top number 
 --- @param color number
 --- @param score integer
-function Brick.new(x, y, color, score)
+function Brick.new(left, top, color, score)
    local self = setmetatable({},Brick)
-   self.left = x or 0
-   self.top = y or 0
+   self.hitregion = Rect.new(
+         left, 
+         top,
+         left + BRICK_WIDTH, 
+         top + BRICK_HEIGHT
+         )
    self.color = color
    self.score = score or 0
    return self
@@ -113,16 +121,17 @@ function Brick:draw()
 
     ---@diagnostic disable-next-line: param-type-not-match
     GameEngine:fill_rect(
-    math.floor(self.left),
-    math.floor(self.top),
-    math.floor(self.left + self.width),
-    math.floor(self.top+ self.height))
+    math.floor(self.hitregion.left),
+    math.floor(self.hitregion.top),
+    math.floor(self.hitregion.right),
+    math.floor(self.hitregion.bottom))
 end
 
----@diagnostic disable-next-line: param-type-not-match
 ----------------------------------------------------------------------------------------------
 -- Platform stuff
 ----------------------------------------------------------------------------------------------
+---@class Platform
+---@field hitregion Rect
 local Platform = {
     hitregion = Rect.new(
          (WINDOW_WIDTH/2-BRICK_WIDTH/2), 
@@ -146,7 +155,10 @@ end
 ----------------------------------------------------------------------------------------------
 -- Ball stuff
 ----------------------------------------------------------------------------------------------
-local BALLDEFAULTSPEED = 90
+local BALLDEFAULTSPEED = 300
+---@class Ball
+---@field radius number
+---@field hitregion Rect
 local Ball = {radius = 8}
 Ball.__index = Ball
 
@@ -158,7 +170,7 @@ function Ball.new(x, y)
     ---@diagnostic disable-next-line: param-type-not-match
     self.hitregion = Rect.new( 
         x-self.radius,
-        y- self.radius,
+        y-self.radius,
         x+self.radius,
         y+self.radius)
     self.directionX = 1
@@ -183,6 +195,34 @@ function Ball:tick()
         ) 
 end
 
+---@param collisionShape Rect
+---@return boolean
+function Ball:handle_collision(collisionShape)
+    if(is_overlapping(self.hitregion, collisionShape)) then
+
+        local xDist = math.min(self.hitregion.right - collisionShape.left, collisionShape.right - self.hitregion.left)
+        local yDist = math.min(self.hitregion.bottom - collisionShape.top, collisionShape.bottom - self.hitregion.top)
+
+        if(xDist < yDist) then
+
+            self.directionX = -self.directionX
+            self.hitregion:move((xDist)* self.directionX, 0)
+            
+        elseif (yDist < xDist) then
+
+            self.directionY = -self.directionY
+            self.hitregion:move(0, (yDist)* self.directionY) 
+                
+        else
+            self.hitregion:move(-(xDist), (yDist))
+            self.directionX = -self.directionX
+            self.directionY = -self.directionY
+        end
+
+        return true
+    end
+    return false
+end
 ----------------------------------------------------------------------------------------------
 -- Setup
 ----------------------------------------------------------------------------------------------
@@ -191,9 +231,9 @@ local bricks = {}
 for row = 1, #rowColors do
     for col = 1, AMOUNT_OF_COLUMS do
     local brick = Brick.new(
-        ((col-1) * (Brick.width + SPACE_BETWEEN_BRICKS) + BORDER),
-        ((row-1) * (Brick.height + SPACE_BETWEEN_BRICKS) + HUDSPACE),
-        rowColors[row])
+        ((col-1) * (BRICK_WIDTH + SPACE_BETWEEN_BRICKS) + BORDER),
+        ((row-1) * (BRICK_HEIGHT + SPACE_BETWEEN_BRICKS) + HUDSPACE),
+        rowColors[row].color, rowColors[row].score)
     table.insert(bricks, brick)
     end
 end
@@ -204,7 +244,7 @@ local collisionShapes =
     Rect.new(0,0,BORDER,WINDOW_HEIGHT),
     Rect.new(WINDOW_WIDTH-BORDER,0,WINDOW_WIDTH,WINDOW_HEIGHT),
     Rect.new(0,0,WINDOW_WIDTH,BORDER*3),
-    Platform.hitregion
+  
 }
 
 ----------------------------------------------------------------------------------------------
@@ -252,34 +292,18 @@ function paint(rect)
 end
 
 function tick()
-
     for i = 1, #collisionShapes do
-
-        if(is_overlapping(ball.hitregion, collisionShapes[i])) then
-
-            local xDist = math.min(ball.hitregion.right - collisionShapes[i].left, collisionShapes[i].right - ball.hitregion.left)
-            local yDist = math.min(ball.hitregion.bottom - collisionShapes[i].top, collisionShapes[i].bottom - ball.hitregion.top)
-
-            if(xDist < yDist) then
-
-                ball.directionX = -ball.directionX
-                ball.hitregion:move((xDist)* ball.directionX, 0)
-              
-            elseif (yDist < xDist) then
-
-                ball.hitregion:move(0, -(yDist)* ball.directionY) 
-                ball.directionY = -ball.directionY
-                    
-            else
-                ball.hitregion:move(-(xDist), (yDist))
-                ball.directionX = -ball.directionX
-                ball.directionY = -ball.directionY
-            end
-            
-            
+        ball:handle_collision(collisionShapes[i])
+    end 
+    for i = 1, #bricks do
+        if(ball:handle_collision(bricks[i].hitregion)) then
+            removedBrick = table.remove(bricks, i)
+            removedBrick = nil
         end
-            
-        
+    end
+    if(ball:handle_collision(Platform.hitregion)) then
+       --ball.directionX = get_center(ball.hitregion).x
+      -- ball.directionX = 
     end
     ball:tick()
 end
@@ -293,8 +317,8 @@ function mouse_button_action(isLeft, isDown,  x, y,  wParam)
     if(isLeft and isDown)
     then
         for i = 1, #bricks do
-            if(x > bricks[i].left and x < bricks[i].left + bricks[i].width and
-                y > bricks[i].top and y < bricks[i].top + bricks[i].height)
+            if(x > bricks[i].hitregion.left and x < bricks[i].hitregion.right and
+                y > bricks[i].hitregion.top and y < bricks[i].hitregion.bottom)
             then
                 removedBrick = table.remove(bricks, i)
                 removedBrick = nil
