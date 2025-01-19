@@ -45,7 +45,7 @@ function Audio:stop() end
 function Audio:get_volume() end
 
 ---@return integer
-function Audio:get_volume() end
+function Audio:get_duration() end
 
 ---@param volume integer
 ---@return boolean
