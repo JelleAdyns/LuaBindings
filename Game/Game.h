@@ -57,5 +57,6 @@ private:
 	// -------------------------
 
 	sol::state_view& m_rLua;
+	std::unique_ptr<Audio> m_pAudio{nullptr};
 
 };

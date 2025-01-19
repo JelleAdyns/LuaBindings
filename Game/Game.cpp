@@ -26,11 +26,14 @@ Game::~Game()
 void Game::Initialize()			
 {
 	AbstractGame::Initialize();
+	
+	GAME_ENGINE->SetKeyList(_T("K"));
 	m_rLua["initialize"]();
 }
 
 void Game::Start()
 {
+	m_pAudio = std::make_unique<Audio>(_T("Resources/siren.mp3"));
 	m_rLua["start"]();
 }
 
@@ -46,6 +49,8 @@ void Game::Paint(RECT rect) const
 
 void Game::Tick()
 {
+	m_pAudio->Tick();
+	
 	m_rLua["tick"]();
 }
 
@@ -71,12 +76,20 @@ void Game::CheckKeyboard()
 
 void Game::KeyPressed(TCHAR key)
 {	
+	if (key == _T('K'))
+	{
+		m_pAudio->Play();
+	}
 	m_rLua["key_pressed"](key);
 }
 
 void Game::CallAction(Caller* callerPtr)
 {
-	// Insert the code that needs to execute when a Caller (= Button, TextBox, Timer, Audio) executes an action
+	if (callerPtr == m_pAudio.get())
+	{
+		dynamic_cast<Audio*>(callerPtr)->Stop();
+	}
+	m_rLua["call_action"](callerPtr);
 }
 
 

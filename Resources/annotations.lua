@@ -6,6 +6,11 @@
 --- @return integer  
 function RGB(r,g,b) end
 
+--- @class LongSize
+--- @field cx integer 
+--- @field cy integer
+LongSize = {}
+
 --- @class LongPoint
 --- @field x integer 
 --- @field y integer
@@ -17,6 +22,39 @@ LongPoint = {}
 --- @field right integer 
 --- @field bottom integer 
 LongRect = {}
+
+--- @class Caller
+Caller = {}
+
+--- @class Audio
+Audio = {}
+
+---@param text string
+---@return Audio
+function Audio.new(filename) end
+    
+---@return boolean
+function Audio:exists() end
+
+---@param msecStart: integer
+---@param msecStop: integer
+function Audio:play(msecStart, msecStop) end
+function Audio:stop() end
+
+---@return integer
+function Audio:get_volume() end
+
+---@return integer
+function Audio:get_volume() end
+
+---@param volume integer
+---@return boolean
+function Audio:set_volume(volume) end
+
+function Audio:on_tick() end
+
+
+function add_action_listener() end
 
 ---@class Font
 Font = {}
@@ -159,3 +197,10 @@ function GameEngine:draw_string(text, left, top,right,bottom) end
 --- @param key integer
 --- @return boolean
 function GameEngine:is_key_down(key) end
+
+---@param text string
+---@param font Font
+---@param rect LongRect
+---@return LongSize
+---@overload fun(text: string, font: Font): LongSize
+function GameEngine:calculate_text_dimensions(text,font, rect) end

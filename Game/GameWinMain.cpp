@@ -35,6 +35,13 @@ void AllocateConsole()
 }
 void CreateBindings(sol::state& lua)
 {
+    lua.new_usertype<SIZE>(
+        "LongSize",
+        sol::constructors<sol::types<>>(),
+        "cx", &SIZE::cx,
+        "cy", &SIZE::cy
+    );
+
     lua.new_usertype<POINT>(
         "LongPoint",
         sol::constructors<sol::types<>>(),
@@ -71,8 +78,22 @@ void CreateBindings(sol::state& lua)
         "exists", &HitRegion::Exists
     );
 
-    lua.new_usertype<Font>("Font", sol::constructors<Font(const tstring&, bool, bool, bool, int)>());
+    lua.new_usertype<Caller>(
+        "Caller"
+    );
+    lua.new_usertype<Audio>(
+        "Audio", sol::constructors<Audio(const tstring&)>(),
+        "exists", &Audio::Exists,
+        "play", &Audio::Play,
+        "stop", &Audio::Stop,
+        "on_tick", &Audio::Tick,
+        "get_volume", &Audio::GetVolume,
+        "set_volume", &Audio::SetVolume,
+        "get_duration", &Audio::GetDuration
+    );
 
+    lua.new_usertype<Font>("Font", sol::constructors<Font(const tstring&, bool, bool, bool, int)>());
+   
     lua.new_usertype<GameEngine>(
         "GameEngine",
         // Setters
@@ -106,7 +127,10 @@ void CreateBindings(sol::state& lua)
             sol::resolve<bool(int, int, int, int, int) const>(&GameEngine::FillOval)),
         "fill_arc", &GameEngine::FillArc,
         // Other
-        "is_key_down", &GameEngine::IsKeyDown
+        "is_key_down", &GameEngine::IsKeyDown,
+        "calculate_text_dimensions", sol::overload(
+            sol::resolve<SIZE(const tstring&, const Font*) const>(&GameEngine::CalculateTextDimensions),
+            sol::resolve<SIZE(const tstring&, const Font*, RECT) const>(&GameEngine::CalculateTextDimensions))
     );
 
     lua["RGB"] = [](int r, int g, int b) {return RGB(r, g, b); };
@@ -137,16 +161,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     int result = 0;
     try
     {  
-        std::string scriptName = "Scripts/Breakout.lua";
+        std::string scriptName = "Resources/Breakout.lua";
         lua.script_file(scriptName);
         lua["GameEngine"] = GAME_ENGINE;
         result = myGameEngine.Run(hInstance, nCmdShow);
     }
     catch (const sol::error& e)
     {
-        OutputDebugStringA("\nError executing Lua script: " );
-        OutputDebugStringA(e.what());
-        OutputDebugStringA("\n\n");
+        std::cout << "Error executing Lua script: " << e.what() << "\n";
+        std::cin.get();
     }
     return result;
 

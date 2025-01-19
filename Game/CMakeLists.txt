@@ -48,8 +48,8 @@ message(STATUS "CMAKE EXE: ${CMAKE_COMMAND}")
 
 add_custom_target(copyResources ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Scripts
-    ${CMAKE_CURRENT_BINARY_DIR}/Scripts
+    ${CMAKE_SOURCE_DIR}/Resources
+    ${CMAKE_CURRENT_BINARY_DIR}/Resources
     COMMENT "Copying resources into the binary folder"
 )
 
