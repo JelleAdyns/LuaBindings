@@ -135,6 +135,20 @@ void CreateBindings(sol::state& lua)
 
     lua["RGB"] = [](int r, int g, int b) {return RGB(r, g, b); };
 }
+std::string ConvertLPWSTRToString(LPWSTR lpwstr)
+{
+    if (!lpwstr) return std::string();
+
+    int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, nullptr, 0, nullptr, nullptr);
+    if (sizeNeeded <= 0) return std::string();
+
+    std::string result(sizeNeeded, 0);
+    WideCharToMultiByte(CP_UTF8, 0, lpwstr, -1, result.data(), sizeNeeded, nullptr, nullptr);
+
+    result.pop_back();
+
+    return result;
+}
 
 //-----------------------------------------------------------------
 // Create GAME_ENGINE global (singleton) object and pointer
@@ -148,7 +162,11 @@ GameEngine* GAME_ENGINE{ &myGameEngine };
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
     //Credit to Adam Knapecz
+
+#ifdef _DEBUG
+
     AllocateConsole();
+#endif // _DEBUG
 
     sol::state lua;
 
@@ -158,10 +176,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    
     myGameEngine.SetGame(new Game(lua));
 
+    std::string scriptName = "Breakout.lua";
+
+    if (*(lpCmdLine) != '\0')
+    {
+        scriptName = ConvertLPWSTRToString(lpCmdLine);
+    }
+
+
     int result = 0;
     try
     {  
-        std::string scriptName = "Resources/Breakout.lua";
         lua.script_file(scriptName);
         lua["GameEngine"] = GAME_ENGINE;
         result = myGameEngine.Run(hInstance, nCmdShow);

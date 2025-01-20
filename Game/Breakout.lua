@@ -344,7 +344,7 @@ function initialize()
     GameEngine:set_height(WINDOW_HEIGHT)
     GameEngine:set_title("SE_Jelle_Adyns_Breakout")
     GameEngine:set_key_list("SK")
-    GameEngine:set_framerate(60)
+    GameEngine:set_framerate(120)
     GameEngine:set_font(USED_FONT_LARGE)
    
 end
@@ -436,9 +436,7 @@ function tick()
     ball:tick()
     --Collide with borders
     for i = 1, #collisionShapes do
-        if (ball:handle_collision(collisionShapes[i])) then
-            
-        end
+        ball:handle_collision(collisionShapes[i])
     end 
     --Collide with bricks
     for i = 1, #bricks do

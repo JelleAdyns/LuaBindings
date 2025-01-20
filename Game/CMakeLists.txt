@@ -1,4 +1,4 @@
-project(GameName)
+project(LuaBindings)
 
 set(GUI_TYPE WIN32)
 
@@ -40,6 +40,12 @@ FetchContent_MakeAvailable(sol2)
 target_link_libraries(${PROJECT_NAME} PRIVATE lua::lua sol2)
 
 
+list(APPEND LUA_SOURCES 
+            "Breakout.lua"
+            "Tetris.lua"
+            "annotations.lua"
+)
+
 #Copy Resources
 message(STATUS "BINARY DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "CMAKE EXE: ${CMAKE_COMMAND}")
@@ -52,5 +58,12 @@ add_custom_target(copyResources ALL
     ${CMAKE_CURRENT_BINARY_DIR}/Resources
     COMMENT "Copying resources into the binary folder"
 )
+
+FOREACH(LUA_SOURCE IN LISTS LUA_SOURCES)
+    add_custom_command(TARGET copyResources POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_SOURCE_DIR}/${LUA_SOURCE}
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/${LUA_SOURCE})
+ENDFOREACH()
 
 add_dependencies(${PROJECT_NAME} copyResources)
