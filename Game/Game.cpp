@@ -65,7 +65,7 @@ void Game::MouseMove(int x, int y, WPARAM wParam)
 }
 
 void Game::CheckKeyboard()
-{	
+{
 	m_rLua["check_keyboard"]();
 }
 

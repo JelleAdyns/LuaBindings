@@ -41,8 +41,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE lua::lua sol2)
 
 
 list(APPEND LUA_SOURCES 
-            "Breakout.lua"
-            "Tetris.lua"
+            "script_Breakout.lua"
+            "script_Tetris.lua"
             "annotations.lua"
 )
 

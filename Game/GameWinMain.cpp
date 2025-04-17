@@ -10,6 +10,7 @@
 #include "GameEngine.h"
 #include "sol/sol.hpp"
 #include <filesystem>
+#include <shellapi.h>
 namespace fs = std::filesystem;
 
 #include "Game.h"	
@@ -85,11 +86,15 @@ void CreateBindings(sol::state& lua)
         "Audio", sol::constructors<Audio(const tstring&)>(),
         "exists", &Audio::Exists,
         "play", &Audio::Play,
+        "pause", &Audio::Pause,
         "stop", &Audio::Stop,
         "on_tick", &Audio::Tick,
         "get_volume", &Audio::GetVolume,
         "set_volume", &Audio::SetVolume,
-        "get_duration", &Audio::GetDuration
+        "get_duration", &Audio::GetDuration,
+        "set_repeat", &Audio::SetRepeat,
+        "is_playing", &Audio::IsPlaying,
+        "is_paused", &Audio::IsPaused
     );
 
     lua.new_usertype<Font>("Font", sol::constructors<Font(const tstring&, bool, bool, bool, int)>());
@@ -130,10 +135,19 @@ void CreateBindings(sol::state& lua)
         "is_key_down", &GameEngine::IsKeyDown,
         "calculate_text_dimensions", sol::overload(
             sol::resolve<SIZE(const tstring&, const Font*) const>(&GameEngine::CalculateTextDimensions),
-            sol::resolve<SIZE(const tstring&, const Font*, RECT) const>(&GameEngine::CalculateTextDimensions))
+            sol::resolve<SIZE(const tstring&, const Font*, RECT) const>(&GameEngine::CalculateTextDimensions)),
+        "show_mouse_pointer", &GameEngine::ShowMousePointer
     );
 
     lua["RGB"] = [](int r, int g, int b) {return RGB(r, g, b); };
+
+    lua["delta_time"] = []() {return GAME_ENGINE->GetFrameDelay() / 1000.f; };
+
+    lua["VK_SPACE"] = VK_SPACE;
+    lua["VK_RIGHT"] = VK_RIGHT;
+    lua["VK_LEFT"] = VK_LEFT;
+    lua["VK_DOWN"] = VK_DOWN;
+    lua["VK_UP"] = VK_UP;
 }
 std::string ConvertLPWSTRToString(LPWSTR lpwstr)
 {
@@ -164,7 +178,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
     //Credit to Adam Knapecz
 
 #ifdef _DEBUG
-
     AllocateConsole();
 #endif // _DEBUG
 
@@ -176,11 +189,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    
     myGameEngine.SetGame(new Game(lua));
 
-    std::string scriptName = "Breakout.lua";
+    std::string scriptName = "script_Breakout.lua";
 
-    if (*(lpCmdLine) != '\0')
+    int nrOfArguments = 0;
+    auto cmdArg = CommandLineToArgvW(GetCommandLineW(), &nrOfArguments);
+
+    std::cout << nrOfArguments;
+
+    if (nrOfArguments > 1)
     {
-        scriptName = ConvertLPWSTRToString(lpCmdLine);
+        std::filesystem::path arg{ cmdArg[1] };
+        scriptName = arg.string();
     }
 
 

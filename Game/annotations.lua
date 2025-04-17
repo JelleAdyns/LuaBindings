@@ -39,6 +39,7 @@ function Audio:exists() end
 ---@param msecStart: integer
 ---@param msecStop: integer
 function Audio:play(msecStart, msecStop) end
+function Audio:pause() end
 function Audio:stop() end
 
 ---@return integer
@@ -50,6 +51,15 @@ function Audio:get_duration() end
 ---@param volume integer
 ---@return boolean
 function Audio:set_volume(volume) end
+
+---@param repeatSound boolean
+function Audio:set_repeat(repeatSound) end
+
+---@return boolean
+function Audio:is_playing() end
+
+---@return boolean
+function Audio:is_paused() end
 
 function Audio:on_tick() end
 
@@ -204,3 +214,11 @@ function GameEngine:is_key_down(key) end
 ---@return LongSize
 ---@overload fun(text: string, font: Font): LongSize
 function GameEngine:calculate_text_dimensions(text,font, rect) end
+
+
+---@param show boolean
+function GameEngine:show_mouse_pointer(show) end
+
+---@return number
+function delta_time() end
+    

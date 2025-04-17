@@ -22,9 +22,6 @@ local BRICK_ROWS = {
     {score = 1, color = YELLOW},
     {score = 1, color = YELLOW}
     }
-function delta_time()
-    return GameEngine:get_frame_delay()/1000
-end
 
 
 ----------------------------------------------------------------------------------------------
@@ -343,10 +340,10 @@ function initialize()
     GameEngine:set_width(WINDOW_WIDTH)
     GameEngine:set_height(WINDOW_HEIGHT)
     GameEngine:set_title("SE_Jelle_Adyns_Breakout")
-    GameEngine:set_key_list("SK")
+    GameEngine:set_key_list("S")
     GameEngine:set_framerate(120)
     GameEngine:set_font(USED_FONT_LARGE)
-   
+    GameEngine:show_mouse_pointer(false)
 end
 
 function start()
